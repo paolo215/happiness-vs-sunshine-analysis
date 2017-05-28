@@ -188,7 +188,7 @@ angular.module("main").directive("responses", function() {
 
             // build map
             var createMap = function(images) {
-                var mapChart = AmCharts.makeChart( "chartdiv", {
+                var mapChart = AmCharts.makeChart("worldMap", {
                   "type": "map",
                   "projection": "eckert6",
                   "titles": [ {
@@ -205,18 +205,6 @@ angular.module("main").directive("responses", function() {
                 } );
                 return mapChart;
             };
-
-
-            /*
-            $scope.update = function() {
-                calculateMinAndMax($scope.key);
-                console.log("update");
-                var images = evaluateResponseMap($scope.key);
-                mapChart["dataProvider"]["images"] = images;
-                mapChart.validateData();
-                
-            }
-            */
 
 
 
