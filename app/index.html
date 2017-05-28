@@ -1,0 +1,65 @@
+<!-- Styles -->
+<style>
+#chartdiv {
+  width: 100%;
+  height: 50%;
+}																		
+#barCharts {
+ width: 100%;
+ height: 50%;
+
+}
+
+.barChart {
+ width: 50%;
+ height: 25em;
+ display: inline-block !important;
+
+ margin-top: 20px;
+}
+
+.bar {
+ width: 50%;
+ height: 25em;
+
+}
+
+
+.amcharts-chart-div a {
+    display: none !important;
+
+}
+
+
+</style>
+
+<!-- Resources -->
+<script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+<script src="https://www.amcharts.com/lib/3/ammap.js"></script>
+<script src="https://www.amcharts.com/lib/3/maps/js/worldLow.js"></script>
+<script src="https://www.amcharts.com/lib/3/plugins/export/export.min.js"></script>
+<script src="https://www.amcharts.com/lib/3/serial.js"></script>
+<link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+<script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/angular-route/angular-route.js"></script>
+<script src="app.js"></script>
+<script src="map.js"></script>
+<script src="controller.js"></script>
+
+
+<body ng-app="main">
+    <div ng-controller="mainController">
+        <div id="menu">
+            <div id="button" ng-click="showMap()">Responses</div>
+            <div id="button" ng-click="showAnalysis()">Analysis</div>
+        </div>
+        <center>
+            <responses ng-show="showMain"></responses>
+            <analysis ng-show="!showMain"></analysis>
+        </center>
+        
+
+    </div>
+
+</body>
