@@ -70,13 +70,13 @@ angular.module("main").directive("responses", function() {
                 for(var question in mapData[place]) {
                     if(mapData[place][question]["type"] == "yes_no") {
                         var closed = evaluateResponseClosed(place, question);
-                        var closedChart = createPie(closed, question, place, closedKey + closedCounter.toString());
+                        var closedChart = createBar(closed, question, place, closedKey + closedCounter.toString());
                         closedCounter +=1;
                     }
 
                     if(mapData[place][question]["type"] == "scale") {
                         var scale = evaluateResponseScale(place, question);
-                        var scaleChart = createPie(scale, question, place, scaleKey + scaleCounter.toString());
+                        var scaleChart = createBar(scale, question, place, scaleKey + scaleCounter.toString());
                         scaleCounter += 1;
                     }
 
@@ -221,7 +221,7 @@ angular.module("main").directive("responses", function() {
 
 
     
-           var createPie = function(closed, question, place, id) {
+           var createBar = function(closed, question, place, id) {
                 var closedChart = AmCharts.makeChart(id, {
                     "titles" : [ { "text" : question, "size" : 15 }, { "text" : place, "size" : 8}],
                     "type" : "serial",
@@ -251,26 +251,12 @@ angular.module("main").directive("responses", function() {
                 });
                 return closedChart;
 
-            /*
-                var  = AmCharts.makeChart(id, {
-                    "titles" : [{ "text" : question}, { "text" : place }],
-                    "type" : "closed",
-                    "dataProvider" : closed,
-                    "valueField" : "value",
-                    "titleField" : "title",
-                    "colorField" : "color",
-                    "labelColorField" : "color",
-                    "balloon" : { "fixedPosition" : true }
-
-                });
-                return ;
-            */
            };
 
 
 
         }],
-        templateUrl: 'map.html'
+        templateUrl: 'responses.html'
     }           
 
 });
