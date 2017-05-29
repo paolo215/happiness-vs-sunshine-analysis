@@ -1,5 +1,12 @@
 <!-- Styles -->
 <style>
+
+.main {
+    width: 100%;
+    height: 100%;
+
+}
+
 #analysisBarChart {
     width: 100%;
     height: 50%;
@@ -38,6 +45,14 @@
 }
 
 
+
+#button {
+    display: inline-block;
+    text-align: center;
+    width: 150px;
+    margin: 0 auto;
+}
+
 </style>
 
 <!-- Resources -->
@@ -56,7 +71,7 @@
 <script src="controller.js"></script>
 
 
-<body ng-app="main">
+<body class="main" ng-app="main">
     <div ng-controller="mainController">
         <div id="menu">
             <div id="button" ng-click="showMap()">Responses</div>
