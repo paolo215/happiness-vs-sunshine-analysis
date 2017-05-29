@@ -9,6 +9,35 @@ angular.module("main").directive("analysis", function() {
 
         var barChart;
                 
+        // hard coded annual hours worth of sunshine values. 
+        //I couldn't find an easy to use and easy to understand API
+        var sunshine = {
+            "South East Asia": 1876.7,
+            "Northern Europe": 1633,
+            "Ontario, Canada": 2066.4,
+            "Sacramento, CA, USA": 3607.8,
+            "Portland, OR, USA": 2340.9,
+            "Middle East": 3248.2,
+            "Southern California": 3054.6,
+
+        };
+        
+        // Sort by value
+        var tempArray = [];
+        for(var loc in sunshine) {
+            tempArray.push([loc, sunshine[loc]]);
+        };
+
+        tempArray.sort(function(a,b) { return a[1] - b[1]});
+         
+        // Obtain only the keys
+        var sorted = [];
+        for(var item in tempArray) {
+            sorted.push(tempArray[item][0]);
+        };
+
+
+
         $http.get("analysis.json").then(function(data) {
             data = data.data;
             var scale_data = data["scale"];
@@ -22,18 +51,19 @@ angular.module("main").directive("analysis", function() {
 
         var evaluate_scale = function(data) {
             var scale = [];
-            for(var location in data) {
+            for(var item in sorted) {
+                var location = sorted[item];
                 scale.push({ 
                     "region" : location,
                     "mean" : data[location]["mean"],
                     "std" : data[location]["std"],
+                    "sunshine": sunshine[location],
                    });
             };
             return scale;
         };
 
         var createBarChart = function(data) {
-            console.log(data);
             var chart = AmCharts.makeChart("analysisBarChart", {
                 "type": "serial",
                 "dataProvider": data,
@@ -42,9 +72,11 @@ angular.module("main").directive("analysis", function() {
                     "id": "v1",
                     "axisAlpha": 0,
                     "minimum": 0,
+                    "maximum": 70,
                 }],
                 "graphs": [{
-                    "balloonText" : "Value:<b>[[mean]]</b><br>Error:<b>[[std]]</b>",
+                    "balloonText" : "Value:<b>[[mean]]</b><br>Error:<b>[[std]]</b>" +
+                                    "<br>Sunshine:<b>[[sunshine]]</b>",
                     "labelText": "[[mean]]",
                     "type": "column",
                     "bullet": "yError",
@@ -60,10 +92,12 @@ angular.module("main").directive("analysis", function() {
                 "categoryAxis": {
                     "gridPosition": "start",
                     "axisAlpha": 0,
+                    "labelFunction": function(value) {
+                        return value + " (" + sunshine[value] + ")";
+                    }
                 }
 
             });
-            console.log(chart);
             return chart;
         };
 
