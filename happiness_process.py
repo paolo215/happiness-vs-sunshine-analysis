@@ -99,8 +99,8 @@ def analysis():
 
         if not location in data["scale"]["locations"]:
             data["scale"]["locations"][location] = {"mean" : 0, "std": 0}
-        data["scale"]["locations"][location]["mean"] = scale_df.mean().mean()
-        data["scale"]["locations"][location]["std"] = scale_df.mean().std()
+        data["scale"]["locations"][location]["mean"] = scale_df.sum(axis=1).mean(axis=0)
+        data["scale"]["locations"][location]["std"] = scale_df.sum(axis=1).std(axis=0)
         
     
         if not location in data["all"]["locations"]:
