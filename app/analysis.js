@@ -15,12 +15,16 @@ angular.module("main").directive("analysis", function() {
             "South East Asia": 1876.7,
             "Northern Europe": 1633,
             "Ontario, Canada": 2066.4,
-            "Sacramento, CA, USA": 3607.8,
-            "Portland, OR, USA": 2340.9,
+            "Sacramento, CA": 3607.8,
+            "Portland, OR": 2340.9,
             "Middle East": 3248.2,
             "Southern California": 3054.6,
 
         };
+
+        for(var loc in sunshine) {
+            sunshine[loc] = Number((sunshine[loc] / 24.0).toPrecision(3));
+        }
         
         // Sort by value
         var tempArray = [];
@@ -55,8 +59,8 @@ angular.module("main").directive("analysis", function() {
                 var location = sorted[item];
                 scale.push({ 
                     "region" : location,
-                    "mean" : data[location]["mean"],
-                    "std" : data[location]["std"],
+                    "mean" : Number(data[location]["mean"].toPrecision(3)),
+                    "error" : Number(data[location]["error"].toPrecision(3)),
                     "sunshine": sunshine[location],
                    });
             };
@@ -73,15 +77,16 @@ angular.module("main").directive("analysis", function() {
                     "axisAlpha": 0,
                     "minimum": 0,
                     "maximum": 70,
+                    "title": "Average score",
                 }],
                 "graphs": [{
-                    "balloonText" : "Value:<b>[[mean]]</b><br>Error:<b>[[std]]</b>" +
-                                    "<br>Sunshine:<b>[[sunshine]]</b>",
+                    "balloonText" : "Value:<b>[[mean]]</b><br>Error:<b>[[error]]</b>" +
+                                    "<br>Sunshine:<b>[[sunshine]] days</b>",
                     "labelText": "[[mean]]",
                     "type": "column",
                     "bullet": "yError",
                     "bulletColor": "#000",
-                    "errorField": "std",
+                    "errorField": "error",
                     "lineThickness": 2,
                     "valueField": "mean",
                     "bulletAxis": "v1",
@@ -93,9 +98,13 @@ angular.module("main").directive("analysis", function() {
                     "gridPosition": "start",
                     "axisAlpha": 0,
                     "labelFunction": function(value) {
-                        return value + " (" + sunshine[value] + ")";
-                    }
-                }
+                        return value + "<br>" + sunshine[value] + " days";
+                    },
+                    "title" : "Region",
+                },
+                "export": {
+                    "enabled" : true,
+                },
 
             });
             return chart;
