@@ -98,13 +98,15 @@ def analysis():
         print(location, total)
 
         if not location in data["scale"]["locations"]:
-            data["scale"]["locations"][location] = {"mean" : 0, "std": 0}
+            data["scale"]["locations"][location] = {"mean" : 0, "std": 0, "error" : 0}
         data["scale"]["locations"][location]["mean"] = scale_df.sum(axis=1).mean(axis=0)
         data["scale"]["locations"][location]["std"] = scale_df.sum(axis=1).std(axis=0)
+        data["scale"]["locations"][location]["error"] = data["scale"]["locations"][location]["std"] / np.sqrt(len(df))
+
+
         
-    
-        if not location in data["all"]["locations"]:
-            data["all"]["locations"][location] = {"total" : 0}
+   
+
 
 
     log = open("analysis.json", "w")
@@ -180,7 +182,8 @@ def responses():
     log.close()
 
 
-#responses()
+get_locations()
+responses()
 analysis()
 
 
