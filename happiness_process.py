@@ -75,20 +75,19 @@ def analysis():
     scale = [headers[f] for f in scale_questions]
     yes_no = [headers[f] for f in yes_no_questions]
 
-    data["all"] = {}
     data["scale"] = {}
     data["yes_no"] = {}
 
     data["scale"]["locations"] = {}
-    data["yes_no"]["locations"] = {}
-    data["all"]["locations"] = {}
+    data["yes_no"]["results"] = {}
 
     data["scale"]["questions"] = scale
     data["yes_no"]["questions"] = yes_no
-    data["all"]["questions"] = [headers[f] for f in scale_questions + yes_no_questions]
 
     for location in set_locations:
         df = dataframe[dataframe[label] == location]
+        if len(df) == 0:
+            continue
         df_no_label = df.drop(label, axis=1)
         scale_df = df[scale]
         yes_no_df = df[yes_no]
@@ -101,11 +100,31 @@ def analysis():
             data["scale"]["locations"][location] = {"mean" : 0, "std": 0, "error" : 0}
         data["scale"]["locations"][location]["mean"] = scale_df.sum(axis=1).mean(axis=0)
         data["scale"]["locations"][location]["std"] = scale_df.sum(axis=1).std(axis=0)
-        data["scale"]["locations"][location]["error"] = data["scale"]["locations"][location]["std"] / np.sqrt(len(df))
+        data["scale"]["locations"][location]["error"] = scale_df.sum(axis=1).std(axis=0) / np.sqrt(len(df))
 
 
-        
-   
+            
+        for question in yes_no:
+            if not question in data["yes_no"]["results"]:
+                data["yes_no"]["results"][question] = {"yes" : {}, "no": {}}
+                data["yes_no"]["results"][question]["yes"]["locations"] = {}
+                data["yes_no"]["results"][question]["no"]["locations"] = {}
+            
+            if not location in data["yes_no"]["results"][question]["no"]["locations"]:
+                    data["yes_no"]["results"][question]["no"]["locations"][location] = {"mean": 0, "std": 0, "error" : 0}
+            if not location in data["yes_no"]["results"][question]["yes"]["locations"]:
+                data["yes_no"]["results"][question]["yes"]["locations"][location] = {"mean": 0, "std": 0, "error": 0}
+            yes = df[df[question] == YES]
+            no = df[df[question] == NO]
+            if len(yes) > 1:
+                data["yes_no"]["results"][question]["yes"]["locations"][location]["mean"] = yes[scale].sum(axis=1).mean(axis=0)
+                data["yes_no"]["results"][question]["yes"]["locations"][location]["std"] = yes[scale].sum(axis=1).std(axis=0)
+                data["yes_no"]["results"][question]["yes"]["locations"][location]["error"] = yes[scale].sum(axis=1).std(axis=0) / np.sqrt(len(yes))
+
+            if len(no) > 1:
+                data["yes_no"]["results"][question]["no"]["locations"][location]["mean"] = no[scale].sum(axis=1).mean(axis=0)
+                data["yes_no"]["results"][question]["no"]["locations"][location]["std"] = no[scale].sum(axis=1).std(axis=0)
+                data["yes_no"]["results"][question]["no"]["locations"][location]["error"] = no[scale].sum(axis=1).std(axis=0) / np.sqrt(len(no))
 
 
 
@@ -182,8 +201,8 @@ def responses():
     log.close()
 
 
-get_locations()
-responses()
+#get_locations()
+#responses()
 analysis()
 
 
