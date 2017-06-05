@@ -1,7 +1,5 @@
-locations.json
 node_modules/
 bower_components/
 *.swp
 happiness_survey.csv
-responses.json
 config.py
