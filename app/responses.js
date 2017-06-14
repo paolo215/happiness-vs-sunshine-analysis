@@ -43,7 +43,7 @@ angular.module("main").directive("responses", function() {
                     // Store map data 
                     mapData = data["data"];
 
-
+                    // Used for drop down list
                     $scope.selection = [];
 
 
@@ -79,7 +79,7 @@ angular.module("main").directive("responses", function() {
                         $scope.selectedCountry = event.mapObject.label;
 
                         // Show bar charts based on the label
-                        updateInfo(event.mapObject.label);
+                        showResponsesGraphs(event.mapObject.label);
                         // Show graphs
                         $scope.$apply();
                     });
@@ -93,16 +93,22 @@ angular.module("main").directive("responses", function() {
 
 
 
-            var updateInfo = function(place) {
+            // Show responses graphs 
+            var showResponsesGraphs = function(place) {
                 var yes_noCounter = 0;
                 var scaleCounter = 0;
+
+                // Iterate through each questions and generate graph for it
                 for(var question in mapData[place]) {
+
+                    // Evaluate and generate graph for yes_no question
                     if(mapData[place][question]["type"] == "yes_no") {
-                        var yes_no = evaluateResponseClosed(place, question);
+                        var yes_no = evaluateResponseYes_No(place, question);
                         var yes_noChart = createBar(yes_no, question, place, yes_noKey + yes_noCounter.toString());
                         yes_noCounter +=1;
                     }
 
+                    // Evaluate and generate graph for scale type questions
                     if(mapData[place][question]["type"] == "scale") {
                         var scale = evaluateResponseScale(place, question);
                         var scaleChart = createBar(scale, question, place, scaleKey + scaleCounter.toString());
@@ -114,7 +120,7 @@ angular.module("main").directive("responses", function() {
             }
 
 
-            // get min and max values
+            // get min and max values for bubble
             var minBulletSize = 3;
             var maxBulletSize = 20;
             var min = Infinity;
@@ -142,7 +148,9 @@ angular.module("main").directive("responses", function() {
             // it's better to use circle square to show difference between values, not a radius
             var maxSquare = maxBulletSize * maxBulletSize * 2 * Math.PI;
             var minSquare = minBulletSize * minBulletSize * 2 * Math.PI;
-            var evaluateResponseClosed = function(country, key) {
+
+            // Evaluat responses for yes and no question
+            var evaluateResponseYes_No = function(country, key) {
                 var yes_no = {}
                 
                 var counter = mapData[country][key]["count"];
@@ -176,11 +184,10 @@ angular.module("main").directive("responses", function() {
             };
 
 
-            // create circle for each country
+            // Set up bubbles for each locations for the map
             var evaluateResponseMap = function(key) {
                 var images = [];
             
-                //for ( var i = 0; i < mapData.length; i++ ) {
                 for(var country in mapData) {
                   if(country == "questions") {
                     continue;
@@ -215,7 +222,7 @@ angular.module("main").directive("responses", function() {
 
 
 
-            // build map
+            // generate map
             var createMap = function(images) {
                 var mapChart = AmCharts.makeChart("worldMap", {
                   "type": "map",
@@ -237,9 +244,9 @@ angular.module("main").directive("responses", function() {
 
 
 
-    
+            // Create bar charts
            var createBar = function(yes_no, question, place, id) {
-                var yes_noChart = AmCharts.makeChart(id, {
+                var barChart = AmCharts.makeChart(id, {
                     "titles" : [ { "text" : question, "size" : 15 }, { "text" : place, "size" : 8}],
                     "type" : "serial",
                     "theme" : "light",
@@ -253,8 +260,6 @@ angular.module("main").directive("responses", function() {
                         "balloonText" : "[[category]]: <b>[[value]]</b>",
                         "type" : "column",
                         "valueField" : "value",
-                        //"lineColorsField" : "color",
-                        //"fillColorsField" : "color",
                         "fillAlphas" : 0.9,
                     }],
                     "categoryAxis" : {
@@ -266,7 +271,7 @@ angular.module("main").directive("responses", function() {
                     },
 
                 });
-                return yes_noChart;
+                return barChart;
 
            };
 
