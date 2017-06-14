@@ -1,3 +1,7 @@
+"""
+    Preprocessing survey responses for analysis and data visualization
+"""
+
 import pandas as pd
 import numpy as np
 import requests
@@ -100,12 +104,19 @@ def get_locations():
 
 
 def analysis():
+    """
+    - Calculates the mean, std and std error for all the Likert scale responses
+    - Uses each yes and no questions by grouping up responses who responded
+        yes or no and calculates the mean, std, and std error
+
+    """
     data = {}
 
-    num_questions = len(scale_questions) + len(yes_no_questions)
     scale = [headers[f] for f in scale_questions]
     yes_no = [headers[f] for f in yes_no_questions]
 
+
+    # Set up JSON
     data["scale"] = {}
     data["yes_no"] = {}
 
@@ -116,42 +127,60 @@ def analysis():
     data["yes_no"]["questions"] = yes_no
 
     for location in set_locations:
+
+        # Select responses obtained in this location
         df = dataframe[dataframe[label] == location]
+
+        # Skip empty dataframe
         if len(df) == 0:
             continue
+
+        # Drop label
         df_no_label = df.drop(label, axis=1)
+
+        # Get scale and yes and no dataframes
         scale_df = df[scale]
         yes_no_df = df[yes_no]
         
 
-        total = df_no_label.sum(axis=1).mean()
-        print(location, total)
-
+        # Set up location for scale
         if not location in data["scale"]["locations"]:
             data["scale"]["locations"][location] = {"mean" : 0, "std": 0, "error" : 0}
+        
+        # Sum up all scale questions and calculate mean, std and std error
         data["scale"]["locations"][location]["mean"] = scale_df.sum(axis=1).mean(axis=0)
         data["scale"]["locations"][location]["std"] = scale_df.sum(axis=1).std(axis=0)
         data["scale"]["locations"][location]["error"] = scale_df.sum(axis=1).std(axis=0) / np.sqrt(len(df))
 
 
-            
+        # Iterate through yes and no questions
         for question in yes_no:
+
+            # Set up results for this yes and no question
             if not question in data["yes_no"]["results"]:
                 data["yes_no"]["results"][question] = {"yes" : {}, "no": {}}
                 data["yes_no"]["results"][question]["yes"]["locations"] = {}
                 data["yes_no"]["results"][question]["no"]["locations"] = {}
             
+            # Set up for no
             if not location in data["yes_no"]["results"][question]["no"]["locations"]:
                     data["yes_no"]["results"][question]["no"]["locations"][location] = {"mean": 0, "std": 0, "error" : 0}
+
+            # Set up for yes
             if not location in data["yes_no"]["results"][question]["yes"]["locations"]:
                 data["yes_no"]["results"][question]["yes"]["locations"][location] = {"mean": 0, "std": 0, "error": 0}
+
+            # Group up dataframe
             yes = df[df[question] == YES]
             no = df[df[question] == NO]
+
+            # Calculate stats for yes dataframe if length is greater than 1
             if len(yes) > 1:
                 data["yes_no"]["results"][question]["yes"]["locations"][location]["mean"] = yes[scale].sum(axis=1).mean(axis=0)
                 data["yes_no"]["results"][question]["yes"]["locations"][location]["std"] = yes[scale].sum(axis=1).std(axis=0)
                 data["yes_no"]["results"][question]["yes"]["locations"][location]["error"] = yes[scale].sum(axis=1).std(axis=0) / np.sqrt(len(yes))
 
+            # Calculate stats for no dataframe if length is greater than 1
             if len(no) > 1:
                 data["yes_no"]["results"][question]["no"]["locations"][location]["mean"] = no[scale].sum(axis=1).mean(axis=0)
                 data["yes_no"]["results"][question]["no"]["locations"][location]["std"] = no[scale].sum(axis=1).std(axis=0)
@@ -164,7 +193,14 @@ def analysis():
     log.close()
 
 
-def responses():    
+def responses():
+    """
+    Count of responses for each region and group up based on their responses
+    For example, there are 5 groups for Likert scale questiosn (1-5)
+    
+    """    
+
+    # Set up JSON
     data = {}
     data["questions"] = {}
     for i in scale_questions:
@@ -174,10 +210,13 @@ def responses():
         data["questions"][headers[i]] = "yes_no"
 
 
-    num_questions = len(scale_questions) + len(yes_no_questions)
-
+    # Iterate through locations
     for location in set_locations:
+
+        # Filter out rows that does not belong in this location
         df = dataframe[dataframe[label] == location]
+
+
         # Number of partipants
         data[location] = {}
         data[location]["count"] = len(df)
@@ -191,14 +230,20 @@ def responses():
             std = question_df.std()
             total = question_df.sum()
             data[location][question] = {}
+
+            # Set type, mean, total responses and std
             data[location][question]["type"] = "scale"
             data[location][question]["mean"] = float(mean)
             data[location][question]["total"] = int(total)
             data[location][question]["std"] = float(std)
+
+            
             total_score += total
+
             # Count number of occurrances
             data[location][question]["count"] = dict(question_df.value_counts().reindex(range(1,6)).fillna(0).astype(int))
 
+        # Set total score and mean
         data[location]["scale_total"] = total_score
         data[location]["scale_mean"] = total_score / len(scale_questions)
 
@@ -207,11 +252,15 @@ def responses():
             question = headers[i]
             question_df = df[question]
             value_counts = dict(question_df.value_counts())
+
+            # Set up 
             data[location][question] = {}
             data[location][question]["type"] = "yes_no"
             data[location][question]["count"] = {}
             data[location][question]["count"]["Yes"] = 0
             data[location][question]["count"]["No"] = 0
+
+            # Count number of occurrances that responded yes
             if YES in value_counts:
                 data[location][question]["count"]["Yes"] = value_counts[YES]
             
@@ -220,7 +269,9 @@ def responses():
 
             total = question_df.sum()
             total_score += total
-            
+
+        # Calculate total, mean and std
+        num_questions = len(scale_questions) + len(yes_no_questions)            
         data[location]["total_score"] = total_score
         data[location]["mean_score"] = total_score / float(num_questions)
         data[location]["std_score"] = df[question].std()
