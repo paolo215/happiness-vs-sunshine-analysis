@@ -9,31 +9,52 @@ angular.module("main").directive("responses", function() {
         scope: {},
         controller: ["$scope","$http", function mapController($scope, $http) {
 
+            // GPS locations for locations
             var latlong;
 
+            // Selected country in drop list
             $scope.selectedCountry = "";
 
+            // responses data from responses.json 
             var mapData;
+
+            // Bubble map chart
             var mapChart;
+
+            // Store ids for scale and yes and no questions
             $scope.scaleIds = [];
-            $scope.closedIds = [];
+            $scope.yes_noIds = [];
             var scaleKey = "scale";
-            var closedKey = "yes_no";
-            var dropDown = [""];
+            var yes_noKey = "yes_no";
+
+            
             
 
+            // Get locations.json
             // Contains lat and long of each locations
             $http.get("locations.json").then(function(data) {
+
+                // Store coordinates info
                 latlong = data["data"];
+
+                // Get responses.json
                 $http.get("responses.json").then(function(data) {
+
+                    // Store map data 
                     mapData = data["data"];
+
+
                     $scope.selection = [];
-                    var closedCounter = 0;
+
+
+                    var yes_noCounter = 0;
                     var scaleCounter = 0;
+
+                    // Generate ids
                     for(var question in mapData["questions"]) {
-                      if(mapData["questions"][question] == closedKey) {
-                        $scope.closedIds.push(closedKey + closedCounter.toString());
-                        closedCounter+=1;
+                      if(mapData["questions"][question] == yes_noKey) {
+                        $scope.yes_noIds.push(yes_noKey + yes_noCounter.toString());
+                        yes_noCounter+=1;
                       }
                       if(mapData["questions"][question] == scaleKey) {
                         $scope.scaleIds.push(scaleKey + scaleCounter.toString());
@@ -41,17 +62,25 @@ angular.module("main").directive("responses", function() {
                       }
                       $scope.selection.push(question);
                     }
+
+                    // Select first element
                     $scope.key = $scope.selection[0];
 
                     // Create map
+                    // Create min and max radius for the bubble
                     calculateMinAndMax($scope.key);
+
+                    // Evaluate data and use it to generate bubble image
                     var images = evaluateResponseMap($scope.key);
+
+                    // Create bubble map
                     mapChart = createMap(images);
                     mapChart.addListener("clickMapObject", function(event) {
                         $scope.selectedCountry = event.mapObject.label;
 
-                        // Update charts
+                        // Show bar charts based on the label
                         updateInfo(event.mapObject.label);
+                        // Show graphs
                         $scope.$apply();
                     });
                 }, function(error) {
@@ -65,13 +94,13 @@ angular.module("main").directive("responses", function() {
 
 
             var updateInfo = function(place) {
-                var closedCounter = 0;
+                var yes_noCounter = 0;
                 var scaleCounter = 0;
                 for(var question in mapData[place]) {
                     if(mapData[place][question]["type"] == "yes_no") {
-                        var closed = evaluateResponseClosed(place, question);
-                        var closedChart = createBar(closed, question, place, closedKey + closedCounter.toString());
-                        closedCounter +=1;
+                        var yes_no = evaluateResponseClosed(place, question);
+                        var yes_noChart = createBar(yes_no, question, place, yes_noKey + yes_noCounter.toString());
+                        yes_noCounter +=1;
                     }
 
                     if(mapData[place][question]["type"] == "scale") {
@@ -114,12 +143,12 @@ angular.module("main").directive("responses", function() {
             var maxSquare = maxBulletSize * maxBulletSize * 2 * Math.PI;
             var minSquare = minBulletSize * minBulletSize * 2 * Math.PI;
             var evaluateResponseClosed = function(country, key) {
-                var closed = {}
+                var yes_no = {}
                 
                 var counter = mapData[country][key]["count"];
                 var yes = counter["Yes"];
                 var no = counter["No"];
-                closed = [{
+                yes_no = [{
                    "title" : "Yes",
                    "value" : yes,
                    "color" : "#0000FF",
@@ -129,7 +158,7 @@ angular.module("main").directive("responses", function() {
                     "value" : no,
                     "color" : "#FF0000"
                 }];
-                return closed;
+                return yes_no;
             };
 
             var evaluateResponseScale = function(country, key) {
@@ -209,12 +238,12 @@ angular.module("main").directive("responses", function() {
 
 
     
-           var createBar = function(closed, question, place, id) {
-                var closedChart = AmCharts.makeChart(id, {
+           var createBar = function(yes_no, question, place, id) {
+                var yes_noChart = AmCharts.makeChart(id, {
                     "titles" : [ { "text" : question, "size" : 15 }, { "text" : place, "size" : 8}],
                     "type" : "serial",
                     "theme" : "light",
-                    "dataProvider" : closed,
+                    "dataProvider" : yes_no,
                     "valueAxes": [ {
                         "minimum" : 0,
                         "title" : "Number of responses"
@@ -237,7 +266,7 @@ angular.module("main").directive("responses", function() {
                     },
 
                 });
-                return closedChart;
+                return yes_noChart;
 
            };
 

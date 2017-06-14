@@ -23,6 +23,7 @@ angular.module("main").directive("analysis", function() {
 
         };
 
+        // Convert hours to days
         for(var loc in sunshine) {
             sunshine[loc] = Number((sunshine[loc] / 24.0).toPrecision(3));
         }
@@ -33,6 +34,7 @@ angular.module("main").directive("analysis", function() {
             tempArray.push([loc, sunshine[loc]]);
         };
 
+        // Sort in ascending order
         tempArray.sort(function(a,b) { return a[1] - b[1]});
          
         // Obtain only the keys
@@ -43,32 +45,46 @@ angular.module("main").directive("analysis", function() {
 
 
 
+        // Get analysis.json then perform calculations and set up charts
         $http.get("analysis.json").then(function(data) {
             data = data.data;
+
+            // Generate ids for yes and no questions
             var yes_no_data = data["yes_no"];
             for(var item in yes_no_data["questions"]) {
                 $scope.yes_no_ids.push("bar" + item.toString());
             };
+
+            
             var scale_data = data["scale"];
             var scale_locations_data = scale_data["locations"];
-
+    
+            // Evaluate scale responses
             var evaluated_scale_data = evaluate_scale(scale_locations_data);
+
+            // Create bar chart for evaluated scale data
             barChart = createBarChart(evaluated_scale_data);              
 
-
+            // Wait until yes_no_ids has been properly digested
+            // TODO: Provide stackoverflow link
             var hasRegistered = false;
-
             $scope.$watch(function() {
                 if(hasRegistered) return;
                 hasRegistered = true;
                 $scope.$$postDigest(function() {
                     hasRegistered = false;
+                    // Iterate through yes and no questions
                     for(var item in yes_no_data["questions"]) {
+
+                        
                         var question = yes_no_data["questions"][item];
                         var question_data = yes_no_data["results"][question];
                         var yes = question_data["yes"]["locations"];
                         var no = question_data["no"]["locations"];
+                        // Evaluate yes and no data
                         var evaluate_yes_no_data = evaluate_yes_no(yes, no);
+
+                        // Create clustered bar chart
                         var yes_no_chart = createClusteredBarChart($scope.yes_no_ids[item], question, evaluate_yes_no_data);
                     };
 
@@ -77,6 +93,8 @@ angular.module("main").directive("analysis", function() {
         });
 
 
+        // Evaluate scale responses and returns array of JSON used for creating
+        // graphs
         var evaluate_scale = function(data) {
             var scale = [];
             for(var item in sorted) {
@@ -92,6 +110,8 @@ angular.module("main").directive("analysis", function() {
         };
 
 
+        // Evaluate yes and no questions and returns an array of JSON used
+        // for creating graphs
         var evaluate_yes_no = function(yes, no) {
             var scale = [];
             for(var item in sorted) {
@@ -108,7 +128,9 @@ angular.module("main").directive("analysis", function() {
             return scale;
         };
 
+        // Create bar chart for the main analysis
         var createBarChart = function(data) {
+            
             var chart = AmCharts.makeChart("analysisBarChart", {
                 "type": "serial",
                 "dataProvider": data,
@@ -166,6 +188,8 @@ angular.module("main").directive("analysis", function() {
             return chart;
         };
 
+
+        // Create clustered bar chart with scale based on yes and no responses
         var createClusteredBarChart = function(id, question, data) {
             var chart = AmCharts.makeChart(id, {
                 "type": "serial",
