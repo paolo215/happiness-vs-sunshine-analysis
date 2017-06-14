@@ -15,56 +15,87 @@ NO = 1
 
 # Read csv and return dataframe
 dataframe = pd.read_csv(filename)
+
+# Drop timestamp column
 dataframe = dataframe.drop(dataframe.columns[0], axis=1)
-dataframe.fillna(0, inplace=True)
+
+# Replaced NaN with 0
+dataframe.fillna(0, inplace=True) 
+
+# Get label columns
 label = dataframe.columns[len(dataframe.columns)-1]
+
+# Replace 'Yes' and 'No' with assigned values
 dataframe = dataframe.replace(["Yes", "No"], [YES, NO])
+
+# Get dataframe label column
 locations = dataframe[label]
+
+# Get all header columns
 headers = dataframe.columns.values
+
+# Create a set of locations using the locations dataframe
 set_locations = set(locations)
 
 
+# Column 0 to 14 are the scale questions
 scale_questions = range(0, 14)
+
+# 14 to the 2nd to the last column are yes and no typed questions
 yes_no_questions = range(14, len(dataframe.columns)-1)
 
 
-#print([headers[i] for i in scale_questions])
-#print([headers[i] for i in yes_no_questions])
-#sys.exit(1)
-
-
 def get_locations():
-    dict_locations = dict()
+    """
+    Get GPS locations using Google maps API for each of unique locations in the
+    locations dataframe. It then dumps all the locations information to a JSON
+    file.
+    """
+    
+    # Initializes main data structure for this method
+    data = dict()
 
+    # Checks if file already exists. If so, extract all the information 
     if os.path.exists(locations_filename):
         log_locations = open(locations_filename, "r")
-        dict_locations = json.load(log_locations)
+        data = json.load(log_locations)
         log_locations.close()
 
 
+    
     log_locations = open(locations_filename, "w")
 
     # Get coordinates for the map
     for location in set_locations:
-        if location in dict_locations:
+
+        # Skip if location key already exists
+        if location in data:
             continue
+
+        # Call Google maps API 
         response = requests.get("https://maps.google.com/maps/api/geocode/json?" + 
             "key=" + api_key + "&address=" + "+".join(location.split(" ")))
+
+        # Get contents in JSON
         content = response.content
         content = json.loads(content)
         try:
+            # Extract coordinates 
             coordinates = content["results"][0]["geometry"]["location"]
             lat = coordinates["lat"]
             longi = coordinates["lng"]
-            dict_locations[location] = {}
-            dict_locations[location]["latitude"] = lat
-            dict_locations[location]["longitude"] = longi
+
+            # Add coordinates to main data structure
+            data[location] = {}
+            data[location]["latitude"] = lat
+            data[location]["longitude"] = longi
         except:
             print(content)
 
     
-    if dict_locations:
-        json.dump(dict_locations, log_locations)
+    # Dump data to JSON file
+    if data:
+        json.dump(data, log_locations)
         log_locations.close()
 
 
